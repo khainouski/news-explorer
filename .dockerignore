@@ -1,0 +1,12 @@
+.git
+.github
+.idea
+.vscode
+.dockerignore
+Dockerfile
+bin
+tmp
+*.log
+*.md
+.env
+.env.*
