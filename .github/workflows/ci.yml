@@ -52,6 +52,10 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
+          # Prebuilt golangci-lint binaries lag behind fresh Go releases (they can be built
+          # with an older Go than the one this module targets, which golangci-lint refuses to
+          # run with). Building from source with the toolchain set up above sidesteps that.
+          install-mode: goinstall
 
       - name: Run tests
         run: go test -race -shuffle=on ./...
