@@ -9,7 +9,7 @@ import (
 	"github.com/khainouski/news-explorer/pkg/logger"
 )
 
-func hello(w http.ResponseWriter, _ *http.Request) {
+func hello(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write([]byte("Hello from News Explorer!"))
 	if err != nil {
 		log.Error().Err(err).Msg("Error writing response")
@@ -17,7 +17,12 @@ func hello(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	log.Info().Msg("200 OK! Hello handler called")
+	log.Info().
+		Str("method", r.Method).
+		Str("path", r.URL.Path).
+		Str("remote_addr", r.RemoteAddr).
+		Str("user_agent", r.UserAgent()).
+		Msg("page visited")
 }
 
 func probe(w http.ResponseWriter, _ *http.Request) {
