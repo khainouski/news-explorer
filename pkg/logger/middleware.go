@@ -1,0 +1,31 @@
+package logger
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/khainouski/news-explorer/pkg/router"
+)
+
+// Middleware logs one line per request after the handler runs, carrying the OTEL trace_id so
+// Grafana can jump from a log line straight to its trace (see the Loki->Tempo derived field in
+// news-platform-deploy/platform/monitoring/grafana-values.yaml).
+func Middleware(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		ww := router.WriterWrapper(w)
+		next.ServeHTTP(ww, r.WithContext(r.Context()))
+
+		log.Info().
+			Int("code", ww.Code()).
+			Str("method", fmt.Sprintf("%s %s", r.Method, router.ExtractPath(r.Context()))).
+			Str("remote_addr", r.RemoteAddr).
+			Str("user_agent", r.UserAgent()).
+			Str("trace_id", trace.SpanContextFromContext(r.Context()).TraceID().String()).
+			Msg("request handled")
+	}
+
+	return http.HandlerFunc(fn)
+}

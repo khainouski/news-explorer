@@ -4,7 +4,7 @@ IMAGE    := $(APP_NAME):local
 .PHONY: run build test lint tidy docker-build docker-run
 
 run:
-	go run ./cmd/app
+	LOG_PRETTY=true go run ./cmd/app
 
 build:
 	CGO_ENABLED=0 go build -o bin/$(APP_NAME) ./cmd/app
