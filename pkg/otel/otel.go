@@ -20,7 +20,7 @@ import (
 type Config struct {
 	// Endpoint is the Tempo OTLP/gRPC address (e.g. "tempo.monitoring.svc.cluster.local:4317").
 	// Empty disables tracing (SilentModeInit) - the default for local `make run`.
-	Endpoint string
+	Endpoint string `envconfig:"OTEL_ENDPOINT"`
 }
 
 var shutdownTracing func(ctx context.Context) error

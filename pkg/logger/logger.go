@@ -9,8 +9,8 @@ import (
 )
 
 type Config struct {
-	Level         string
-	PrettyConsole bool
+	Level         string `envconfig:"LOG_LEVEL"  default:"info"`
+	PrettyConsole bool   `envconfig:"LOG_PRETTY" default:"false"`
 }
 
 func Init(c Config) {
