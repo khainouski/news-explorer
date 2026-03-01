@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: news_explorer
+      POSTGRES_PASSWORD: local
+      POSTGRES_DB: news_explorer
+    ports:
+      - '5432:5432'
