@@ -1,0 +1,8 @@
+BEGIN;
+
+DELETE FROM articles;
+DELETE FROM sources;
+DELETE FROM tags;
+DELETE FROM users;
+
+COMMIT;
