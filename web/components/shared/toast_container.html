@@ -1,0 +1,6 @@
+{{/* toast-container is an empty slot inside a page's own <main> (not a fixed global overlay) -
+     web/static/js/toast.js fills it with banners at runtime. Drop {{template "toast-container"}}
+     as the first thing inside <main> on any page that wants to support one - only web/pages
+     that trigger a redirect-with-message flow (see source_form.html's deleteSource()) need it
+     today. */}}
+{{define "toast-container"}}<div id="toast-container" class="mb-6 space-y-3"></div>{{end}}

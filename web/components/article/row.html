@@ -1,0 +1,15 @@
+{{/* article-row takes one article.ArticleView - invoked as {{template "article-row" .}} from a range. */}}
+{{define "article-row"}}
+<a href="{{.URL}}" target="_blank" rel="noopener noreferrer" class="flex items-start gap-4 border-b border-gray-100 px-6 py-4 transition-colors last:border-b-0 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/60">
+  {{template "badge-lg" .Badge}}
+  <div class="min-w-0 flex-1">
+    <h3 class="font-semibold text-gray-900 dark:text-gray-100">{{.Title}}</h3>
+    <p class="mt-1 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">{{.Summary}}</p>
+  </div>
+  <div class="flex shrink-0 items-center gap-2 whitespace-nowrap pt-0.5 text-sm text-gray-400 dark:text-gray-500">
+    <span>{{.SourceName}}</span>
+    <span>{{.TimeAgo}}</span>
+    {{template "icon-chevron-right" "h-4 w-4"}}
+  </div>
+</a>
+{{end}}

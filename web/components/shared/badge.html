@@ -1,0 +1,6 @@
+{{/* Badge is the small colored square used as a source's logo (e.g. "Go" on blue).
+     Two sizes: -lg for the article list, -sm for the sources panel. */}}
+
+{{define "badge-lg"}}<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white {{.Color}}">{{.Text}}</div>{{end}}
+
+{{define "badge-sm"}}<div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white {{.Color}}">{{.Text}}</div>{{end}}

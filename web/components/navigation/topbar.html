@@ -1,0 +1,66 @@
+{{/* topbar receives the current page's view (needs .SearchScope, .Query, .TopbarUser) - invoked
+     as {{template "topbar" .}}. SearchScope is independent of Active
+     (which nav item highlights) - it's only set on pages that actually have the results
+     container the search box targets. "articles" filters by title/summary/source name
+     (hx-target="#home-articles"), "sources" by name/description/tag
+     (hx-target="#sources-results") - the sort/source state living in that same results container
+     gets pulled in via hx-include so searching doesn't reset it (see the hidden inputs in
+     "home-articles"/"sources-results"). Anything else (coming_soon.html, source_form.html - which
+     sets Active "sources" to keep the nav highlighted but has no results container) gets a
+     disabled input. */}}
+{{define "topbar"}}
+<header class="flex items-center gap-4 border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
+  {{if eq .SearchScope "articles"}}
+  <form method="get" action="/" hx-get="/" hx-target="#home-articles" hx-swap="outerHTML" hx-push-url="true" hx-include="#home-articles input[type='hidden']" hx-trigger="keyup changed delay:400ms from:input[name='q'], search from:input[name='q']" class="relative max-w-2xl flex-1">
+    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400 dark:text-gray-500">{{template "icon-search" "h-4 w-4"}}</span>
+    <input type="text" name="q" value="{{.Query}}" placeholder="Search articles or sources..." class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-14 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"/>
+    <kbd class="absolute inset-y-0 right-3 flex items-center text-xs text-gray-400 dark:text-gray-500">&#8984;K</kbd>
+  </form>
+  {{else if eq .SearchScope "sources"}}
+  <form method="get" action="/sources" hx-get="/sources" hx-target="#sources-results" hx-swap="outerHTML" hx-push-url="true" hx-include="#sources-results input[type='hidden']" hx-trigger="keyup changed delay:400ms from:input[name='q'], search from:input[name='q']" class="relative max-w-2xl flex-1">
+    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400 dark:text-gray-500">{{template "icon-search" "h-4 w-4"}}</span>
+    <input type="text" name="q" value="{{.Query}}" placeholder="Search articles or sources..." class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-14 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"/>
+    <kbd class="absolute inset-y-0 right-3 flex items-center text-xs text-gray-400 dark:text-gray-500">&#8984;K</kbd>
+  </form>
+  {{else}}
+  <div class="relative max-w-2xl flex-1">
+    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400 dark:text-gray-500">{{template "icon-search" "h-4 w-4"}}</span>
+    <input type="text" placeholder="Search articles or sources..." disabled class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-14 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"/>
+    <kbd class="absolute inset-y-0 right-3 flex items-center text-xs text-gray-400 dark:text-gray-500">&#8984;K</kbd>
+  </div>
+  {{end}}
+  <div class="ml-auto flex items-center gap-2">
+    <button type="button" onclick="toggleTheme()" class="relative z-20 flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+      <span class="dark:hidden">{{template "icon-sun" "h-4 w-4"}}</span>
+      <span class="hidden dark:block">{{template "icon-moon" "h-4 w-4"}}</span>
+    </button>
+    {{if .TopbarUser.LoggedIn}}
+    <details class="relative">
+      <summary class="flex list-none cursor-pointer items-center gap-2 rounded-lg border border-gray-200 py-1.5 pl-1.5 pr-2.5 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 [&::-webkit-details-marker]:hidden">
+        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">{{.TopbarUser.Initials}}</span>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{.TopbarUser.Name}}</span>
+        {{template "icon-chevron-down" "h-4 w-4 text-gray-400"}}
+      </summary>
+      <div class="absolute right-0 z-10 mt-2 w-52 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900">
+        <a href="/account" class="flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-gray-50 dark:text-indigo-400 dark:hover:bg-gray-800">
+          {{template "icon-lock" "h-4 w-4"}}
+          Change Password
+        </a>
+        <div class="my-1 border-t border-gray-100 dark:border-gray-800"></div>
+        <form method="post" action="/logout">
+          <button type="submit" class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
+            {{template "icon-logout" "h-4 w-4"}}
+            Log out
+          </button>
+        </form>
+      </div>
+    </details>
+    {{else}}
+    <a href="/login" class="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-gray-50 dark:border-gray-700 dark:text-indigo-400 dark:hover:bg-gray-800">
+      {{template "icon-login" "h-4 w-4"}}
+      Log in
+    </a>
+    {{end}}
+  </div>
+</header>
+{{end}}

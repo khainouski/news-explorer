@@ -1,0 +1,9 @@
+{{/* sortable-th takes one source.SortHeader - invoked as {{template "sortable-th" .SomeHeader}}.
+     Href already carries the current search term + toggled direction (see
+     internal/controller/http/source/list.go's sortHeader). */}}
+{{define "sortable-th"}}
+<a href="{{.Href}}" hx-get="{{.Href}}" hx-target="#sources-results" hx-swap="outerHTML" hx-push-url="true" class="inline-flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200">
+  {{.Label}}
+  {{if eq .Dir "asc"}}{{template "icon-chevron-down" "h-3 w-3"}}{{else if eq .Dir "desc"}}{{template "icon-chevron-up" "h-3 w-3"}}{{end}}
+</a>
+{{end}}
