@@ -1,0 +1,109 @@
+{{/* content receives a source.SourceFormView - shared by the "Add Source" and "Edit Source" flows,
+     distinguished by EditingID; Title/SubmitLabel/ActionURL are computed server-side (see
+     source.Handler.renderForm), not branched here. */}}
+{{define "content"}}
+<div class="flex h-full">
+  {{template "sidebar" .Active}}
+  <div class="flex flex-1 flex-col overflow-hidden">
+    {{template "topbar" .}}
+    <main class="flex-1 overflow-y-auto px-6 py-6">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{.Title}}</h1>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{if .EditingID}}Update this source's details.{{else}}Add a new RSS or Atom feed source to aggregate articles.{{end}}</p>
+
+      {{if .Error}}
+      <div class="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-500/10 dark:text-red-400">{{.Error}}</div>
+      {{end}}
+
+      <form method="post" action="{{.ActionURL}}" class="{{if not .Error}}mt-6{{else}}mt-4{{end}} rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name <span class="text-red-500">*</span></label>
+            <input id="name" name="name" type="text" required value="{{.Source.Name}}" placeholder="e.g. Go Blog" class="mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"/>
+            <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">A friendly name for this source.</p>
+          </div>
+          <div>
+            <label for="feed_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Feed URL <span class="text-red-500">*</span></label>
+            <input id="feed_url" name="feed_url" type="url" required value="{{.Source.FeedURL}}" placeholder="https://example.com/feed.xml" class="mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"/>
+            <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">The RSS or Atom feed URL.</p>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+          <textarea id="description" name="description" rows="3" placeholder="Brief description of this source (optional)..." class="mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500">{{.Source.Description}}</textarea>
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">A short description of this source.</p>
+        </div>
+
+        <div class="mt-6">
+          <label for="tag" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tag <span class="text-red-500">*</span></label>
+          <select id="tag" name="tag" required class="mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+            <option value="" {{if not .Source.SelectedTag}}selected{{end}} disabled>Select a tag</option>
+            {{range .Tags}}<option value="{{.Value}}" {{if eq .Value $.Source.SelectedTag}}selected{{end}}>{{.Label}}</option>{{end}}
+          </select>
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Choose the category that best fits this source.</p>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <label for="badge" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Badge</label>
+            <input id="badge" name="badge" type="text" maxlength="4" value="{{.Source.Badge}}" placeholder="e.g. Go" class="mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"/>
+            <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Short text shown in the source badge. Left blank, we'll generate one from the name.</p>
+          </div>
+          <div>
+            <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Badge Color</span>
+            <div class="mt-1.5 flex items-center gap-2">
+              {{range .BadgeColors}}
+              <label class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full {{.Value}}">
+                <input type="radio" name="badge_color" value="{{.Value}}" {{if eq .Value $.Source.SelectedColor}}checked{{end}} class="peer sr-only"/>
+                <span class="sr-only">{{.Label}}</span>
+                <span class="text-white opacity-0 peer-checked:opacity-100" aria-hidden="true">{{template "icon-check" "h-4 w-4"}}</span>
+              </label>
+              {{end}}
+            </div>
+            <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Choose a color for the source badge.</p>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
+          <div class="mt-1.5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-4 transition-colors has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:ring-1 has-[:checked]:ring-indigo-500 dark:border-gray-700 dark:has-[:checked]:bg-indigo-500/10">
+              <input type="radio" name="status" value="active" {{if ne .Source.Status "inactive"}}checked{{end}} class="mt-0.5 h-4 w-4 accent-indigo-600"/>
+              <span>
+                <span class="block text-sm font-medium text-gray-900 dark:text-gray-100">Active</span>
+                <span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">Source will be synced and articles will be fetched.</span>
+              </span>
+            </label>
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-4 transition-colors has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:ring-1 has-[:checked]:ring-indigo-500 dark:border-gray-700 dark:has-[:checked]:bg-indigo-500/10">
+              <input type="radio" name="status" value="inactive" {{if eq .Source.Status "inactive"}}checked{{end}} class="mt-0.5 h-4 w-4 accent-indigo-600"/>
+              <span>
+                <span class="block text-sm font-medium text-gray-900 dark:text-gray-100">Inactive</span>
+                <span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">Source is disabled and will not be synced.</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-6 flex items-center gap-3 border-t border-gray-100 pt-6 dark:border-gray-800">
+          <button type="submit" class="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+            {{template "icon-save" "h-4 w-4"}}
+            {{.SubmitLabel}}
+          </button>
+          <a href="/sources" class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</a>
+        </div>
+      </form>
+
+      {{if .EditingID}}
+      <div class="mt-6 rounded-xl border border-red-200 bg-white p-6 dark:border-red-900/50 dark:bg-gray-900">
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Danger Zone</h2>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Permanently delete this source and every article pulled from it. This can't be undone.</p>
+        <button type="button" id="delete-source-button" data-source-id="{{.EditingID}}" data-source-name="{{.Source.Name}}" class="mt-4 flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-500/10">
+          {{template "icon-trash" "h-4 w-4"}}
+          Delete Source
+        </button>
+      </div>
+      {{end}}
+    </main>
+  </div>
+</div>
+{{end}}
