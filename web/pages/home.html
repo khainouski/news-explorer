@@ -1,0 +1,72 @@
+{{/* content receives an article.HomeView. */}}
+{{define "content"}}
+<div class="flex h-full">
+  {{template "sidebar" .Active}}
+  <div class="flex flex-1 flex-col overflow-hidden">
+    {{template "topbar" .}}
+    {{template "home-articles" .}}
+  </div>
+</div>
+{{end}}
+
+{{/* home-articles receives an article.HomeView - the part of the page the sort dropdown/search/source
+     click swaps in place (via hx-target="#home-articles" below), same pattern as
+     web/pages/sources.html's "sources-results". The Sources sidebar lives inside this block too
+     (not just the article list) so its unread badges (see web/components/source/item.html) stay
+     in sync - clicking a source marks it read server-side, and without the sidebar in the swap
+     the stale badge would keep showing until a full page reload. */}}
+{{define "home-articles"}}
+<div id="home-articles" class="flex flex-1 overflow-hidden">
+  <main class="flex-1 overflow-y-auto">
+    {{/* Picked up by the topbar's search form via hx-include, so searching doesn't drop the
+         current sort/source/tag filter - see web/components/navigation/topbar.html. */}}
+    <input type="hidden" name="sort" value="{{.SortBy}}"/>
+    <input type="hidden" name="source" value="{{.SourceID}}"/>
+    <input type="hidden" name="tag" value="{{.TagID}}"/>
+    <div class="flex items-center justify-between px-6 pt-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">All Articles</h1>
+        <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <span>{{.TotalCount}} articles{{if not .FilterSourceName}} from {{.SourceCount}} sources{{end}}</span>
+          {{if .FilterSourceName}}
+          <span class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400">{{.FilterSourceName}}</span>
+          <a href="{{.ClearFilterHref}}" hx-get="{{.ClearFilterHref}}" hx-target="#home-articles" hx-swap="outerHTML" hx-push-url="true" class="text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200" aria-label="Clear source filter">{{template "icon-x" "h-3.5 w-3.5"}}</a>
+          {{end}}
+          {{if .Query}}<span>matching &#8220;{{.Query}}&#8221;</span>{{end}}
+        </p>
+      </div>
+      <details class="relative">
+        <summary class="flex w-fit list-none cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 [&::-webkit-details-marker]:hidden">
+          {{template "icon-list" "h-4 w-4"}}
+          {{.SortLabel}}
+          {{template "icon-chevron-down" "h-4 w-4"}}
+        </summary>
+        <div class="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900">
+          {{range .SortOptions}}
+          <a href="{{.Href}}" hx-get="{{.Href}}" hx-target="#home-articles" hx-swap="outerHTML" hx-push-url="true" class="block px-3 py-2 text-sm {{if .Active}}font-semibold text-indigo-600 dark:text-indigo-400{{else}}text-gray-700 dark:text-gray-300{{end}} hover:bg-gray-50 dark:hover:bg-gray-800">{{.Label}}</a>
+          {{end}}
+        </div>
+      </details>
+    </div>
+    <div class="mx-6 mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+      <span class="text-sm text-gray-500 dark:text-gray-400">Filter by tag:</span>
+      {{range .TagFilters}}
+      <a href="{{.Href}}" hx-get="{{.Href}}" hx-target="#home-articles" hx-swap="outerHTML" hx-push-url="true" class="rounded-full px-3 py-1 text-sm font-medium transition-colors {{if .Active}}bg-indigo-600 text-white{{else}}bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700{{end}}">{{.Label}}</a>
+      {{end}}
+    </div>
+    <div class="mx-6 mb-6 mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      {{range .Articles}}{{template "article-row" .}}{{end}}
+    </div>
+  </main>
+  <aside class="w-80 shrink-0 overflow-y-auto border-l border-gray-200 bg-white px-5 py-6 dark:border-gray-800 dark:bg-gray-900">
+    <div class="flex items-center justify-between">
+      <h2 class="font-semibold text-gray-900 dark:text-gray-100">Sources ({{.SourceCount}})</h2>
+      <a href="/sources" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">Manage</a>
+    </div>
+    <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Select a source to filter articles</p>
+    <div class="mt-3 divide-y divide-gray-100 dark:divide-gray-800">
+      {{range .Sources}}{{template "source-item" .}}{{end}}
+    </div>
+  </aside>
+</div>
+{{end}}
