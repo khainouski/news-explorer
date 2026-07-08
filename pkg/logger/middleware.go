@@ -16,12 +16,12 @@ import (
 func Middleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ww := router.WriterWrapper(w)
-		next.ServeHTTP(ww, r.WithContext(r.Context()))
+		next.ServeHTTP(ww, r)
 
 		log.Info().
 			Int("code", ww.Code()).
 			Str("method", fmt.Sprintf("%s %s", r.Method, router.ExtractPath(r.Context()))).
-			Str("remote_addr", r.RemoteAddr).
+			Str("remote_addr", router.ClientIP(r)).
 			Str("user_agent", r.UserAgent()).
 			Str("trace_id", trace.SpanContextFromContext(r.Context()).TraceID().String()).
 			Msg("request handled")
