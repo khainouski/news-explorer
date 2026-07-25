@@ -7,15 +7,15 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.30.0"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/khainouski/news-explorer/pkg/otel/tracer"
 	"github.com/khainouski/news-explorer/pkg/router"
 )
 
 // Middleware starts one root span per request (or continues one propagated in via headers),
-// named after the matched route so spans for "/users/{id}" don't fragment into one series per ID.
+// named after the matched route so spans for "/sources/{id}" don't fragment into one series per ID.
 func Middleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))

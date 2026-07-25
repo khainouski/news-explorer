@@ -50,6 +50,11 @@ func Init(ctx context.Context, c Config) error {
 
 	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithEndpoint(c.Endpoint), otlptracegrpc.WithInsecure())
 	if err != nil {
+		// Falls back to the no-op tracer rather than leaving tracer.tracer at its nil zero value -
+		// every tracer.Start call (one per DB query, one per HTTP request) would otherwise panic
+		// on a nil interface the first time it's called.
+		SilentModeInit()
+
 		return fmt.Errorf("failed to create OTLP trace exporter: %w", err)
 	}
 
