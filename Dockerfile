@@ -16,6 +16,13 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -o /out/app \
     ./cmd/app
 
+# Same version Makefile's migrate-install pins - adds ~6MB, measured. Lets the deploy pipeline's
+# migrate Job (news-platform-deploy: migrate-job.yaml) reuse this image instead of a second one.
+RUN CGO_ENABLED=0 GOOS=linux go install \
+    -ldflags="-s -w" \
+    -tags 'postgres' \
+    github.com/golang-migrate/migrate/v4/cmd/migrate@v4.19.1
+
 FROM alpine:3.22 AS run
 
 RUN apk add --no-cache ca-certificates \
@@ -25,6 +32,8 @@ RUN apk add --no-cache ca-certificates \
 WORKDIR /app
 
 COPY --from=build /out/app ./app
+COPY --from=build /go/bin/migrate /usr/local/bin/migrate
+COPY migration/ ./migration/
 
 USER app
 
