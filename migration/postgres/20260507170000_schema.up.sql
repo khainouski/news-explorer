@@ -85,8 +85,9 @@ CREATE INDEX sources_tag_id_idx ON sources (tag_id);
 -- internal/adapter/postgres/source.List/Get).
 CREATE TABLE articles
 (
-    id        TEXT PRIMARY KEY,
-    source_id TEXT NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
+    id          TEXT PRIMARY KEY,
+    source_id   TEXT NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
+    external_id TEXT NOT NULL, -- stable ID from the source's own feed - see adapter/feed.ToArticles
 
     title   TEXT NOT NULL,
     summary TEXT NOT NULL,
@@ -102,7 +103,13 @@ CREATE TABLE articles
         CHECK (length(trim(title)) > 0),
 
     CONSTRAINT articles_url_not_empty
-        CHECK (length(trim(url)) > 0)
+        CHECK (length(trim(url)) > 0),
+
+    -- Dedup key for RSS/Atom sync (see adapter/postgres/article.InsertBatch's ON CONFLICT) -
+    -- scoped to source_id rather than global, since external_id is only ever unique within the
+    -- feed it came from, not across sources.
+    CONSTRAINT articles_source_id_external_id_key
+        UNIQUE (source_id, external_id)
 );
 
 CREATE INDEX articles_source_id_idx ON articles (source_id);
