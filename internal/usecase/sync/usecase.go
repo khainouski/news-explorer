@@ -20,9 +20,11 @@ type Sources interface {
 	UpdateLastSynced(ctx context.Context, sourceID string) error
 }
 
+// Articles has just the one method - dedup against what's already stored is PostgreSQL's job
+// (InsertBatch's ON CONFLICT (source_id, external_id) DO NOTHING), not an app-side existence
+// check, so there's no separate "what already exists" query here.
 type Articles interface {
-	ExistingURLs(ctx context.Context, sourceID string) (map[string]bool, error)
-	Create(ctx context.Context, a domain.Article) error
+	InsertBatch(ctx context.Context, articles []domain.Article) (int, error)
 }
 
 // Feed only covers Fetch - feed.Parse/feed.ToArticles are plain functions, not part of this

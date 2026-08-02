@@ -9,6 +9,12 @@ type Item struct {
 	URL         string
 	Summary     string
 	PublishedAt time.Time
+
+	// AtomID/GUID are the feed's own item identifiers, if the feed has one - see mapper.go's
+	// ExternalID priority. RSS-specific and Atom-specific by nature (that's inherent to what they
+	// are), which is exactly why they stay here in the adapter and never reach domain.Article.
+	AtomID string
+	GUID   string
 }
 
 // Parse reads raw (the bytes Client.Fetch returned) and extracts its entries.
