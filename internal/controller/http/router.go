@@ -19,6 +19,7 @@ import (
 	usecasearticle "github.com/khainouski/news-explorer/internal/usecase/article"
 	usecaseauth "github.com/khainouski/news-explorer/internal/usecase/auth"
 	usecasesource "github.com/khainouski/news-explorer/internal/usecase/source"
+	usecasesync "github.com/khainouski/news-explorer/internal/usecase/sync"
 	usecasetag "github.com/khainouski/news-explorer/internal/usecase/tag"
 	applogger "github.com/khainouski/news-explorer/pkg/logger"
 	"github.com/khainouski/news-explorer/pkg/metrics"
@@ -34,6 +35,7 @@ type Dependencies struct {
 	Source  *usecasesource.UseCase
 	Tag     *usecasetag.UseCase
 	Auth    *usecaseauth.UseCase
+	Sync    *usecasesync.UseCase
 	Metrics *metrics.HTTPServer
 }
 
@@ -58,7 +60,7 @@ func NewRouter(d Dependencies) *chi.Mux {
 	r.NotFound(shared.NotFound) // unmatched routes get the styled 404 page, not chi's plain-text default
 
 	articleHandler := article.NewHandler(d.Article, d.Source, d.Tag)
-	sourceHandler := source.NewHandler(d.Source, d.Tag)
+	sourceHandler := source.NewHandler(d.Source, d.Tag, d.Sync)
 	authHandler := auth.NewHandler(d.Auth)
 
 	r.Group(func(r chi.Router) {
@@ -75,6 +77,7 @@ func NewRouter(d Dependencies) *chi.Mux {
 		r.With(middleware.RequireAdminPage).Get("/sources/{id}/edit", sourceHandler.Edit)
 		r.With(middleware.RequireAdminPage).Post("/sources/{id}", sourceHandler.Update)
 		r.With(middleware.RequireAdminAPI).Delete("/sources/{id}", sourceHandler.Delete)
+		r.With(middleware.RequireAdminAPI).Post("/sources/sync", sourceHandler.Sync)
 
 		r.Get("/search", search)
 
