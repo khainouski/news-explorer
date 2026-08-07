@@ -1,7 +1,12 @@
 // "Sync" button on the Sources page (web/pages/sources.html) - POSTs, then redirects to /sources
 // with a flash toast built from the JSON response.
 async function syncSources(button) {
+  const label = document.getElementById("sync-sources-label");
+  const banner = document.getElementById("sync-progress-banner");
+
   button.disabled = true;
+  if (label) label.textContent = "Syncing...";
+  if (banner) banner.classList.remove("hidden");
 
   let status = 0;
   let data = null;

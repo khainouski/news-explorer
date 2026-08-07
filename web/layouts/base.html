@@ -18,6 +18,14 @@
        theme.js toggles a class instead of an inline style for dark mode. */
     html.sidebar-collapsed #sidebar { width: 76px; }
     html.sidebar-collapsed .sidebar-label { display: none; }
+
+    /* Indeterminate progress bar (web/pages/sources.html's "Syncing..." banner) - a plain sliding
+       gradient, not tied to real progress. */
+    @keyframes indeterminate-progress {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(300%); }
+    }
+    .animate-indeterminate { animation: indeterminate-progress 1.2s ease-in-out infinite; }
   </style>
   <script src="/static/js/theme.js"></script>
   <script src="/static/js/sidebar.js"></script>
