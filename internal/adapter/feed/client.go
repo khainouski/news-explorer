@@ -1,6 +1,4 @@
-// Package feed adapts external RSS/Atom sources into domain-shaped data - the HTTP-fetching
-// counterpart to adapter/postgres, used by usecase/sync to pull live articles instead of relying
-// on migration-seeded data.
+// Package feed adapts external RSS/Atom sources into domain-shaped data.
 package feed
 
 import (
@@ -14,14 +12,11 @@ const (
 	maxRedirects = 5
 )
 
-// Client fetches and parses one source's feed at a time - stateless beyond its http.Client, safe
-// for concurrent use across sources.
+// Client is safe for concurrent use - stateless beyond its http.Client.
 type Client struct {
 	httpClient *http.Client
 }
 
-// New builds a Client with a bounded per-request timeout and a bounded number of redirects, so
-// one slow, unreachable, or redirect-looping feed can't hang a sync run indefinitely.
 func New() *Client {
 	return &Client{
 		httpClient: &http.Client{

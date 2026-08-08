@@ -1,7 +1,5 @@
-// Package http wires the chi router: health probes and static assets outside the instrumented
-// group, then the source/auth/article handler subpackages inside it. The package itself carries
-// no business logic or handler methods anymore - see shared, middleware, and the source/auth/
-// article subpackages.
+// Package http wires the chi router - health probes and static assets outside the instrumented
+// group, then the source/auth/article handler subpackages inside it.
 package http
 
 import (
@@ -27,9 +25,7 @@ import (
 	"github.com/khainouski/news-explorer/web"
 )
 
-// Dependencies are every use case plus Metrics, built once in internal/app/app.go - NewRouter
-// hands each handler subpackage's constructor only the use cases it actually calls, rather than
-// threading this whole struct down into each of them.
+// Dependencies are every use case plus Metrics, built once in internal/app/app.go.
 type Dependencies struct {
 	Article *usecasearticle.UseCase
 	Source  *usecasesource.UseCase
@@ -91,8 +87,7 @@ func NewRouter(d Dependencies) *chi.Mux {
 	return r
 }
 
-// comingSoonView is what web/pages/coming_soon.html renders - the placeholder shell for routes
-// that exist but have no real content yet. Currently just /search.
+// comingSoonView is what web/pages/coming_soon.html renders. Currently just /search.
 type comingSoonView struct {
 	PageTitle   string
 	Active      string
@@ -101,8 +96,6 @@ type comingSoonView struct {
 	TopbarUser  shared.TopbarUser
 }
 
-// search renders the "coming soon" shell for now - real content lands once the feature exists.
-// No use case of its own, so it's handled directly here rather than through a handler subpackage.
 func search(w http.ResponseWriter, r *http.Request) {
 	shared.Render(w, "coming_soon", comingSoonView{
 		PageTitle:   "Search",

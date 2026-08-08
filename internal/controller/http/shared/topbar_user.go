@@ -8,17 +8,14 @@ import (
 	"github.com/khainouski/news-explorer/internal/controller/http/middleware"
 )
 
-// TopbarUser drives web/components/navigation/topbar.html's login button vs. account dropdown
-// (avatar + name + "Change Password"/"Log out"). Zero value (LoggedIn false) renders the login
-// button.
+// TopbarUser drives topbar.html's login button vs. account dropdown. Zero value renders the
+// login button.
 type TopbarUser struct {
 	LoggedIn bool
 	Initials string
 	Name     string
 }
 
-// BuildTopbarUser builds what topbar.html needs from the session middleware.Auth attached to the
-// request context.
 func BuildTopbarUser(r *http.Request) TopbarUser {
 	user := middleware.CurrentUser(r.Context())
 	if user == nil {

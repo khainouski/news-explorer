@@ -8,24 +8,17 @@ import (
 	"time"
 )
 
-// Item is one entry parsed out of a feed - just the RSS2.0/Atom fields mapper.go cares about, not
-// a full spec-accurate model of either format.
+// Item is one entry parsed out of a feed - just the RSS2.0/Atom fields mapper.go cares about.
 type Item struct {
 	Title       string
 	URL         string
 	Summary     string
 	PublishedAt time.Time
-
-	// AtomID/GUID are the feed's own item identifiers, if the feed has one - see mapper.go's
-	// ExternalID priority. RSS-specific and Atom-specific by nature (that's inherent to what they
-	// are), which is exactly why they stay here in the adapter and never reach domain.Article.
-	AtomID string
-	GUID   string
+	AtomID      string
+	GUID        string
 }
 
-// Parse reads raw (the bytes Client.Fetch returned) and extracts its entries - RSS2.0 (rss.go) or
-// Atom (atom.go), picked by the document's root element, the one reliable way to tell the two
-// apart without guessing from content.
+// Parse picks RSS2.0 (rss.go) or Atom (atom.go) by the document's root element.
 func Parse(raw []byte) ([]Item, error) {
 	root, err := rootElementName(raw)
 	if err != nil {
@@ -42,8 +35,6 @@ func Parse(raw []byte) ([]Item, error) {
 	}
 }
 
-// rootElementName returns the document's outermost element name ("rss" or "feed") without
-// decoding the rest of it - just enough to pick which format to fully unmarshal as.
 func rootElementName(raw []byte) (string, error) {
 	dec := xml.NewDecoder(bytes.NewReader(raw))
 
@@ -59,11 +50,8 @@ func rootElementName(raw []byte) (string, error) {
 	}
 }
 
-// dateLayouts covers the date formats real-world feeds actually use: RFC1123Z/RFC1123 for RSS's
-// pubDate (the spec says RFC822, but a numeric or named zone offset are both common), plus the
-// same two with a non-zero-padded day ("Fri, 7 Aug 2026 ..." instead of "Fri, 07 Aug 2026 ...",
-// which Go's reference-time parser otherwise rejects outright) - seen in the wild from Golang
-// Weekly's own feed. RFC3339 and its nanosecond variant cover Atom's published/updated.
+// dateLayouts includes non-zero-padded-day variants ("Fri, 7 Aug ..." not "Fri, 07 Aug ...") -
+// Go's reference-time parser otherwise rejects them outright, and real feeds send them.
 var dateLayouts = []string{
 	time.RFC1123Z,
 	time.RFC1123,
@@ -73,8 +61,6 @@ var dateLayouts = []string{
 	time.RFC3339Nano,
 }
 
-// parseDate tries every layout in dateLayouts in turn, returning the zero time.Time if none match
-// - an unparseable date on one item shouldn't fail the whole feed.
 func parseDate(s string) time.Time {
 	s = strings.TrimSpace(s)
 

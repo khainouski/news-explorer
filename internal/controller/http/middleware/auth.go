@@ -1,6 +1,5 @@
 // Package middleware holds chi middleware for the main route group - session resolution and the
-// admin-only gate built on top of it. A leaf package (only depends on domain/usecase) so both the
-// top-level router and the source/auth/article handler subpackages can import it without a cycle.
+// admin-only gate built on top of it.
 package middleware
 
 import (
@@ -15,15 +14,10 @@ type ctxKey int
 
 const userCtxKey ctxKey = iota
 
-// SessionCookieName is the cookie both Auth (reading it) and the auth subpackage's login/logout
-// handlers (setting/clearing it) agree on.
 const SessionCookieName = "session"
 
-// Auth attaches the logged-in user (if any) to the request context, resolved from the session
-// cookie. It never blocks a request - an absent/invalid/expired cookie just leaves
-// CurrentUser(ctx) nil, same as a first-time visitor; see the auth subpackage for the handlers
-// that actually require a session, and RequireAdminPage/RequireAdminAPI for the ones that require
-// the admin specifically.
+// Auth attaches the logged-in user (if any) to the request context. Never blocks a request - an
+// absent/invalid/expired cookie just leaves CurrentUser(ctx) nil.
 func Auth(uc *usecaseauth.UseCase) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -6,22 +6,20 @@ import "github.com/khainouski/news-explorer/internal/controller/http/shared"
 type SourcesView struct {
 	PageTitle   string
 	Active      string
-	SearchScope string // "sources" - tells topbar.html which results container the search box targets
+	SearchScope string
 	Sources     []SourceRow
 	Total       int
 
 	Query      string // current search term (?q=), matched against name/description/tag
 	SourceHref string // "Source" header link - resets sort, keeps Query
 
-	// SortKey/SortDir/TagID are the raw ?sort=/?dir=/?tag= values (may be ""), exposed as hidden
-	// inputs the topbar's search form picks up via hx-include so searching doesn't drop the
-	// current sort/tag - see web/pages/sources.html and web/components/navigation/topbar.html.
+	// SortKey/SortDir/TagID are the raw ?sort=/?dir=/?tag= values, picked up by the topbar's
+	// search form via hx-include so searching doesn't drop them.
 	SortKey string
 	SortDir string
 	TagID   string
 
-	// TagFilters are the "Filter by tag" pills - the first is always "All" (TagID "").
-	TagFilters []shared.TagPill
+	TagFilters []shared.TagPill // "All" (TagID "") first, then one per tag
 
 	TagHeader      SortHeader
 	StatusHeader   SortHeader
@@ -46,47 +44,36 @@ type SourceRow struct {
 	EditHref     string
 }
 
-// SortHeader drives one sortable column header (see web/components/shared/sortable_th.html): Href
-// already points at the next click's target (toggling direction if this column is already
-// active), Dir is "asc"/"desc" if this column is the current sort, "" otherwise.
+// SortHeader drives one sortable column header. Dir is "asc"/"desc" if this column is the
+// current sort, "" otherwise.
 type SortHeader struct {
 	Label string
 	Href  string
 	Dir   string
 }
 
-// SourceFormView is what web/pages/source_form.html renders: the "Add Source"/"Edit Source" form
-// - both share this template, distinguished by EditingID. Title/SubmitLabel/ActionURL are
-// computed server-side (see source.Handler.renderForm) rather than branched in the template, so
-// the template itself doesn't need to know Add and Edit are even different flows.
+// SourceFormView is what web/pages/source_form.html renders - the Add/Edit Source form, both
+// share this template. EditingID is "" for Add.
 type SourceFormView struct {
 	PageTitle   string
-	Active      string // "sources" - keeps the Sources nav item highlighted
+	Active      string
 	Tags        []TagOption
 	BadgeColors []BadgeColor
 
 	Title       string // "Add Source" or "Edit Source"
 	SubmitLabel string // "Save Source" or "Save Changes"
 	ActionURL   string // "/sources" (create) or "/sources/{id}" (update)
-
-	// EditingID is "" when adding a new source, or the source's ID when editing an existing one -
-	// also drives the Danger Zone/delete button's visibility (Add has nothing to delete yet).
-	EditingID string
+	EditingID   string // "" for Add; also drives the Danger Zone button's visibility
 
 	Error  string
 	Source SourceFormData
 
-	// Query is always "" and SearchScope is always "" - this page has no results to search, so
-	// topbar.html falls back to its disabled-input branch (Active stays "sources" above so the
-	// Sources nav item still highlights).
-	Query       string
-	SearchScope string
+	Query       string // always "" - this page has no results to search
+	SearchScope string // always "" - topbar.html falls back to its disabled-input branch
 
 	TopbarUser shared.TopbarUser
 }
 
-// SourceFormData is the form's own field values - "" (Status: "active") on first load, whatever
-// was submitted on a failed attempt, so the user doesn't have to retype everything.
 type SourceFormData struct {
 	Name          string
 	FeedURL       string
@@ -106,5 +93,5 @@ type TagOption struct {
 // BadgeColor is one swatch in the "Add Source" form's badge color picker.
 type BadgeColor struct {
 	Value string // Tailwind background class, e.g. "bg-blue-500" - what actually gets stored
-	Label string // for the input's accessible name, e.g. "Blue"
+	Label string
 }

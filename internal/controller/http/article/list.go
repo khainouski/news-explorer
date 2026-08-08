@@ -26,20 +26,15 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	tagFilter := r.URL.Query().Get("tag")
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 
-	// Clicking a source in the sidebar both filters the feed to it and marks its articles read -
-	// before List, so the fresh list already reflects it (sidebar counts).
+	// Clicking a source marks its articles read before List, so the fresh list reflects it.
 	if sourceFilter != "" {
 		if err := h.source.MarkRead(ctx, sourceFilter); err != nil {
 			log.Error().Err(err).Msg("mark source read")
 		}
 	}
 
-	// Articles, sources and tags are independent queries, but fetched sequentially rather than
-	// concurrently: each is cheap against this app's small tables, and the connection pool is
-	// only 10 wide (pkg/postgres.maxConns) - sequential holds one connection at a time per
-	// request, concurrent would hold three, tripling how many simultaneous home-page hits it
-	// takes to start queueing for a connection. Not worth the trade for a saving of a few
-	// sub-millisecond queries.
+	// Sequential, not concurrent: cheap queries, and the connection pool is only 10 wide
+	// (pkg/postgres.maxConns) - not worth 3x the connections for microseconds saved.
 	articles, err := h.article.List(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("list articles")
@@ -101,8 +96,6 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		TopbarUser:       shared.BuildTopbarUser(r),
 	}
 
-	// Same HTMX partial-render pattern as /sources: the search box, sort dropdown and source
-	// sidebar all swap #home-articles in place instead of navigating.
 	if r.Header.Get("HX-Request") == "true" {
 		shared.RenderBlock(w, "home", "home-articles", view)
 
@@ -133,8 +126,8 @@ func filterArticlesBySource(articles []domain.Article, sourceID string) []domain
 	return filtered
 }
 
-// filterArticlesByTag keeps articles whose source has the given tag - Article has no tag of its
-// own, it's reached transitively via its source (see internal/domain.Source.Tag).
+// filterArticlesByTag keeps articles whose source has the given tag - Article has no tag column
+// of its own.
 func filterArticlesByTag(articles []domain.Article, sourceByID map[string]domain.Source, tagID string) []domain.Article {
 	filtered := make([]domain.Article, 0, len(articles))
 
@@ -147,8 +140,7 @@ func filterArticlesByTag(articles []domain.Article, sourceByID map[string]domain
 	return filtered
 }
 
-// filterArticlesByQuery keeps articles whose title, summary or source name contains q
-// (case-insensitive) - mirrors the source package's filterSources.
+// filterArticlesByQuery keeps articles whose title, summary or source name contains q.
 func filterArticlesByQuery(articles []domain.Article, sourceByID map[string]domain.Source, q string) []domain.Article {
 	q = strings.ToLower(q)
 
@@ -181,8 +173,6 @@ func sourceName(sources []domain.Source, sourceID string) string {
 	return ""
 }
 
-// sortArticles sorts in place. An empty/unknown sortBy leaves the existing (DB) order untouched
-// - already newest-first, i.e. sortLatest.
 func sortArticles(articles []domain.Article, sortBy string) {
 	switch sortBy {
 	case sortOldest:
@@ -234,7 +224,7 @@ func toSourceViews(sources []domain.Source, unreadCounts map[string]int, activeS
 
 		href := homeURL(sortBy, s.ID, tagFilter, q)
 		if active {
-			href = homeURL(sortBy, "", tagFilter, q) // click the active source again to clear the filter
+			href = homeURL(sortBy, "", tagFilter, q)
 		}
 
 		views = append(views, SourceView{
@@ -250,9 +240,6 @@ func toSourceViews(sources []domain.Source, unreadCounts map[string]int, activeS
 	return views
 }
 
-// tagFilters builds the "Filter by tag" pills - "All" first (clears the tag filter), then one
-// per domain.Tag. Clicking a tag keeps the current sort/source/query, same as clicking a source
-// or sort option.
 func tagFilters(tags []domain.Tag, sortBy, sourceFilter, activeTag, q string) []shared.TagPill {
 	pills := make([]shared.TagPill, 0, len(tags)+1)
 

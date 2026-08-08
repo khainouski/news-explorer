@@ -7,8 +7,7 @@ import (
 	"github.com/khainouski/news-explorer/internal/domain"
 )
 
-// UpdateInput is what the "Edit Source" form submits. Unlike CreateInput it carries an ID - the
-// source being edited, which never changes even if Name does.
+// UpdateInput is what the "Edit Source" form submits. Unlike CreateInput it carries an ID.
 type UpdateInput struct {
 	ID          string
 	Name        string
@@ -20,7 +19,6 @@ type UpdateInput struct {
 	Status      domain.SourceStatus
 }
 
-// Update updates every editable field of an existing source.
 func (u *UseCase) Update(ctx context.Context, input UpdateInput) (domain.Source, error) {
 	badge := input.Badge
 	if badge == "" {

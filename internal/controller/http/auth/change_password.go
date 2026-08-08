@@ -15,8 +15,7 @@ import (
 
 const minPasswordLength = 8
 
-// Account renders the change-password page - reached via "Change Password" in the topbar's
-// account dropdown. Visitors without a session are sent to /login.
+// Account renders the change-password page. Visitors without a session are sent to /login.
 func (h *Handler) Account(w http.ResponseWriter, r *http.Request) {
 	if middleware.CurrentUser(r.Context()) == nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -28,7 +27,7 @@ func (h *Handler) Account(w http.ResponseWriter, r *http.Request) {
 }
 
 // ChangePassword handles the change-password form. On failure it re-renders the form with an
-// error instead of a bare 400 page - same pattern as the source package's Create.
+// error instead of a bare 400 page.
 func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	user := middleware.CurrentUser(r.Context())
 	if user == nil {

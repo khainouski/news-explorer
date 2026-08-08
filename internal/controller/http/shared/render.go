@@ -1,10 +1,6 @@
 // Package shared holds what more than one of the source/auth/article handler subpackages needs:
 // page rendering, the 404 page, the topbar's account-dropdown data, and view types shared across
-// pages (Badge, TagPill). A leaf package (depends only on middleware/web, plus stdlib) so both
-// the top-level router and the handler subpackages can import it without a cycle: router.go needs
-// to import source/auth/article to wire routes, so those subpackages can't import router.go's
-// package back. Each handler's use cases are wired directly by NewRouter, not through here - see
-// internal/controller/http.Dependencies.
+// pages (Badge, TagPill).
 package shared
 
 import (

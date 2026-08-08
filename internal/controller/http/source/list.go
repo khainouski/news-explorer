@@ -71,8 +71,6 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		TopbarUser:     shared.BuildTopbarUser(r),
 	}
 
-	// HTMX requests (search typing, sort header clicks) swap just the results fragment - no full
-	// page navigation/reload. A plain request (first load, no-JS fallback) gets the full page.
 	if r.Header.Get("HX-Request") == "true" {
 		shared.RenderBlock(w, "sources", "sources-results", view)
 
@@ -113,8 +111,6 @@ func filterSourcesByTag(sources []domain.Source, tagID string) []domain.Source {
 	return filtered
 }
 
-// sourceTagFilters builds the "Filter by tag" pills - "All" first (clears the tag filter), then
-// one per domain.Tag. Clicking a tag keeps the current search/sort, same as clicking a header.
 func sourceTagFilters(tags []domain.Tag, q, sortBy, dir, activeTag string) []shared.TagPill {
 	pills := make([]shared.TagPill, 0, len(tags)+1)
 
@@ -135,8 +131,6 @@ func sourceTagFilters(tags []domain.Tag, q, sortBy, dir, activeTag string) []sha
 	return pills
 }
 
-// sortSources sorts in place by the given column, falling back to Name to keep ties stable.
-// An unknown/empty by leaves the existing (DB) order untouched.
 func sortSources(sources []domain.Source, by string, desc bool) {
 	var less func(i, j int) bool
 

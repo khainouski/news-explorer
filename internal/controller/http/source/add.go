@@ -12,9 +12,7 @@ import (
 	usecasesource "github.com/khainouski/news-explorer/internal/usecase/source"
 )
 
-// badgeColorPalette are the swatches offered in the Add/Edit Source form (source_form.html) - a
-// curated subset of the Tailwind colors already used across seeded sources' badges (see
-// migration/postgres).
+// badgeColorPalette are the swatches offered in the Add/Edit Source form.
 var badgeColorPalette = []BadgeColor{
 	{Value: "bg-blue-500", Label: "Blue"},
 	{Value: "bg-emerald-600", Label: "Green"},

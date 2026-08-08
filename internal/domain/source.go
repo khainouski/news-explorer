@@ -15,10 +15,7 @@ type Source struct {
 	ID   string
 	Name string
 
-	// UserID is nil for a global/default source (visible to every user - what every seeded
-	// source is today, and the only kind any creation flow makes). Once source ownership exists,
-	// a non-nil UserID (a real FK to users.id) would scope a source to whoever added it.
-	UserID *int
+	UserID *int // nil = global source, visible to everyone
 
 	FeedURL     string
 	Description string
@@ -29,8 +26,6 @@ type Source struct {
 
 	Status SourceStatus
 
-	// ArticleCount is COUNT(*) of this source's rows in the articles table, computed live by the
-	// adapter query - not a stored column, so it can't go stale.
-	ArticleCount int
+	ArticleCount int        // computed live, not a stored column
 	LastSyncedAt *time.Time // nil if never synced yet
 }

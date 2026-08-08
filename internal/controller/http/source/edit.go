@@ -13,9 +13,7 @@ import (
 	usecasesource "github.com/khainouski/news-explorer/internal/usecase/source"
 )
 
-// Edit renders the "Edit Source" form (same template as "Add Source" - see
-// SourceFormView.EditingID), pre-filled with the source's current values - admin only (see the
-// RequireAdminPage route middleware in router.go).
+// Edit renders the "Edit Source" form, pre-filled with the source's current values.
 func (h *Handler) Edit(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -52,8 +50,6 @@ func (h *Handler) Edit(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Update handles the "Edit Source" form submission - admin only (see the RequireAdminPage route
-// middleware in router.go), same validation/re-render-on-error shape as Create.
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 

@@ -28,7 +28,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // LoginSubmit handles the sign-in form. On failure it re-renders the form with an error instead
-// of a bare 401 page - same pattern as the source package's Create.
+// of a bare 401 page.
 func (h *Handler) LoginSubmit(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid form", http.StatusBadRequest)
@@ -83,10 +83,7 @@ func clearSessionCookie(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// isSecureRequest decides the cookie's Secure flag from the request itself rather than a config
-// flag - Traefik terminates TLS in front of the app (see pkg/router.ClientIP's X-Forwarded-For
-// trust, same reasoning) and forwards X-Forwarded-Proto, so this is "https" in production and
-// "" in local dev without extra config either way.
+// isSecureRequest checks X-Forwarded-Proto too, since Traefik terminates TLS in front of the app.
 func isSecureRequest(r *http.Request) bool {
 	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 }

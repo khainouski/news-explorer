@@ -1,8 +1,5 @@
 // Package auth is the authentication use case - login/logout, resolving a session cookie back to
-// its user, and changing a password. Login inherently touches both the users and sessions
-// tables, but that doesn't mean one combined interface - Users and Sessions are each a 1:1 match
-// for adapter/postgres/user.Repo and adapter/postgres/session.Repo respectively, so
-// internal/app/app.go passes both repos straight to New with no adapter-side glue code needed.
+// its user, and changing a password.
 package auth
 
 import (

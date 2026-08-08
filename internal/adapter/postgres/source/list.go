@@ -8,15 +8,12 @@ import (
 	"github.com/khainouski/news-explorer/pkg/otel/tracer"
 )
 
-// List returns the sources visible to userID: every global source (user_id IS NULL) plus that
-// user's own, if any. userID is always nil for now (see domain.Source.UserID), which resolves to
-// every global source.
+// List returns every global source (user_id IS NULL) plus userID's own, if any.
 func (r *Repo) List(ctx context.Context, userID *int) ([]domain.Source, error) {
 	ctx, span := tracer.Start(ctx, "adapter postgres source List")
 	defer span.End()
 
-	// article_count isn't a stored column - counted live from articles so it can never drift from
-	// what's actually there (see the comment on the articles table in the schema migration).
+	// article_count is counted live, not stored, so it can't go stale.
 	const q = `
 		SELECT s.id, s.user_id, s.name, s.feed_url, s.description, t.id, t.name, s.badge,
 		       s.badge_color, s.status, COUNT(a.id) AS article_count, s.last_synced_at

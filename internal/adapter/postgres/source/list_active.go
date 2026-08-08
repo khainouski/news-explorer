@@ -8,10 +8,8 @@ import (
 	"github.com/khainouski/news-explorer/pkg/otel/tracer"
 )
 
-// ListActive returns every source with status = 'active', for the sync usecase - unlike List,
-// this isn't scoped to a viewer (a sync run has none) and doesn't compute ArticleCount (the sync
-// usecase has no use for it), so the returned Source.ArticleCount is always 0 here, not a real
-// count.
+// ListActive returns every active source for the sync usecase - unscoped (a sync run has no
+// viewer), and Source.ArticleCount is always 0 here, not a real count.
 func (r *Repo) ListActive(ctx context.Context) ([]domain.Source, error) {
 	ctx, span := tracer.Start(ctx, "adapter postgres source ListActive")
 	defer span.End()

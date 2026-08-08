@@ -11,8 +11,7 @@ import (
 )
 
 // Middleware logs one line per request after the handler runs, carrying the OTEL trace_id so
-// Grafana can jump from a log line straight to its trace (see the Loki->Tempo derived field in
-// news-platform-deploy/platform/monitoring/grafana-values.yaml).
+// Grafana can jump from a log line straight to its trace.
 func Middleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ww := router.WriterWrapper(w)

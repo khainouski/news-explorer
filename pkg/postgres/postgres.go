@@ -35,9 +35,8 @@ type Pool struct {
 // New opens a connection pool and pings it, so a wrong password/host/etc. fails fast at startup
 // instead of on the first query.
 func New(ctx context.Context, c Config) (*Pool, error) {
-	// Built as a URL rather than fmt.Sprintf'd keyword/value pairs so a password containing a
-	// space, quote or other special character can't break the connection-string syntax - net/url
-	// percent-encodes each component for us.
+	// Built as a URL, not fmt.Sprintf'd, so a password with special characters can't break it -
+	// net/url percent-encodes each component.
 	dsn := (&url.URL{
 		Scheme: "postgres",
 		User:   url.UserPassword(c.User, c.Password),

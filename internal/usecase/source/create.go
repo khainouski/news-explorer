@@ -19,10 +19,8 @@ type CreateInput struct {
 	Status      domain.SourceStatus
 }
 
-// Create adds a new global source (see domain.Source.UserID - no auth-scoped creation flow yet,
-// so every source created this way is visible to everyone). The ID is a slug of the name; two
-// sources with the same name collide (domain.ErrSourceExists) rather than silently overwriting
-// one another.
+// Create adds a new source. The ID is a slug of the name; two sources with the same name collide
+// (domain.ErrSourceExists) rather than silently overwriting one another.
 func (u *UseCase) Create(ctx context.Context, input CreateInput) (domain.Source, error) {
 	id := slugify(input.Name)
 	if id == "" {

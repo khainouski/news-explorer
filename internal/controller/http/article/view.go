@@ -14,10 +14,8 @@ type HomeView struct {
 
 	Query string // current search term (?q=), matched against title/summary/source name
 
-	// SortBy/SourceID/TagID are the raw ?sort=/?source=/?tag= values (may be ""), exposed as
-	// hidden inputs the topbar's search form picks up via hx-include so searching doesn't drop
-	// the current sort/source/tag filter - see web/pages/home.html and
-	// web/components/navigation/topbar.html.
+	// SortBy/SourceID/TagID are the raw ?sort=/?source=/?tag= values, picked up by the topbar's
+	// search form via hx-include so searching doesn't drop them.
 	SortBy   string
 	SourceID string
 	TagID    string
@@ -28,10 +26,7 @@ type HomeView struct {
 	FilterSourceName string // "" if the feed isn't filtered to one source
 	ClearFilterHref  string // href to remove the source filter (keeps the current sort/tag)
 
-	// TagFilters are the "Filter by tag" pills - the first is always "All" (TagID ""). A tag
-	// filters to articles whose source has that tag (Article has no tag of its own - reached
-	// transitively via its source, see internal/domain.Source.Tag).
-	TagFilters []shared.TagPill
+	TagFilters []shared.TagPill // "All" (TagID "") first, then one per tag
 
 	TopbarUser shared.TopbarUser
 }
