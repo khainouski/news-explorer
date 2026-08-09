@@ -16,6 +16,14 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -o /out/app \
     ./cmd/app
 
+# Runs as a Kubernetes CronJob (news-platform-deploy: sync-cronjob.yaml), same image as ./app,
+# just a different command.
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -trimpath \
+    -ldflags="-s -w" \
+    -o /out/syncjob \
+    ./cmd/syncjob
+
 # Same version Makefile's migrate-install pins - adds ~6MB, measured. Lets the deploy pipeline's
 # migrate Job (news-platform-deploy: migrate-job.yaml) reuse this image instead of a second one.
 RUN CGO_ENABLED=0 GOOS=linux go install \
@@ -32,6 +40,7 @@ RUN apk add --no-cache ca-certificates \
 WORKDIR /app
 
 COPY --from=build /out/app ./app
+COPY --from=build /out/syncjob ./syncjob
 COPY --from=build /go/bin/migrate /usr/local/bin/migrate
 COPY migration/ ./migration/
 
