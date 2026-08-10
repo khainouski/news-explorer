@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/khainouski/news-explorer/internal/controller/http/middleware"
 	"github.com/khainouski/news-explorer/internal/controller/http/shared"
 	"github.com/khainouski/news-explorer/internal/domain"
 )
@@ -27,7 +28,9 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 
 	// Clicking a source marks its articles read before List, so the fresh list reflects it.
-	if sourceFilter != "" {
+	// Admin-only: unread is a single shared flag (no per-user tracking), so an anonymous visitor
+	// clicking a source must not clear it for everyone else.
+	if user := middleware.CurrentUser(ctx); sourceFilter != "" && user != nil && user.IsAdmin() {
 		if err := h.source.MarkRead(ctx, sourceFilter); err != nil {
 			log.Error().Err(err).Msg("mark source read")
 		}
