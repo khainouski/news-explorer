@@ -22,9 +22,11 @@ INSERT INTO sources (id, name, feed_url, description, tag_id, badge, badge_color
     ('jetbrains-goland-blog', 'JetBrains GoLand Blog', 'https://blog.jetbrains.com/go/feed/', 'GoLand IDE updates and Go development tips.', 'go', 'GL', 'bg-fuchsia-600', 'active', NULL),
     ('go-time-podcast', 'Go Time Podcast', 'https://changelog.com/gotime/feed', 'Weekly Go podcast covering language news and ecosystem discussions.', 'go', 'GT', 'bg-pink-600', 'active', NULL),
     ('dev-to-go', 'Dev.to (Go)', 'https://dev.to/feed/tag/golang', 'Community-written Go articles and tutorials.', 'go', '{}', 'bg-gray-900', 'active', NULL),
+    ('lobsters-go', 'Lobsters (Go)', 'https://lobste.rs/t/go.rss', 'Go-tagged links and discussions from the Lobsters tech community.', 'go', 'LO', 'bg-red-600', 'active', NULL),
 
     ('golang-weekly-jobs', 'Golang Weekly Jobs', 'https://golangweekly.com/rss', 'Weekly Go job opportunities included with the newsletter.', 'jobs', 'GJ', 'bg-sky-700', 'active', NULL),
-    ('we-work-remotely', 'We Work Remotely', 'https://weworkremotely.com/categories/remote-programming-jobs.rss', 'Remote software engineering and backend jobs.', 'jobs', 'WWR', 'bg-green-600', 'active', NULL),
+    ('we-work-remotely', 'We Work Remotely', 'https://weworkremotely.com/categories/remote-back-end-programming-jobs.rss', 'Remote back-end programming job listings, including Go roles.', 'jobs', 'WWR', 'bg-green-600', 'active', NULL),
+    ('remote-first-jobs-golang', 'Remote First Jobs', 'https://remotefirstjobs.com/rss/jobs/golang.rss', 'Remote Go job listings from Remote First Jobs.', 'jobs', 'RFJ', 'bg-teal-600', 'active', NULL),
 
     ('kubernetes-blog', 'Kubernetes Blog', 'https://kubernetes.io/feed.xml', 'Official Kubernetes releases, features, and best practices.', 'kubernetes', '⎈', 'bg-blue-600', 'active', NULL),
     ('cncf-blog', 'CNCF Blog', 'https://www.cncf.io/feed/', 'Cloud Native ecosystem news including Kubernetes, Prometheus, Argo CD, and OpenTelemetry.', 'cloud-native', 'CN', 'bg-indigo-700', 'active', NULL),
