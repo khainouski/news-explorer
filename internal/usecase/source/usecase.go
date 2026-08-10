@@ -5,6 +5,7 @@ package source
 
 import (
 	"context"
+	"time"
 
 	"github.com/khainouski/news-explorer/internal/domain"
 )
@@ -16,6 +17,7 @@ type Postgres interface {
 	Update(ctx context.Context, s domain.Source) error
 	Delete(ctx context.Context, id string) (string, error)
 	MarkRead(ctx context.Context, sourceID string) error
+	LastSyncedAt(ctx context.Context) (*time.Time, error)
 }
 
 type UseCase struct {

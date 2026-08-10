@@ -68,7 +68,6 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		StatusHeader:   sortHeader("Status", "status", sortBy, dir, q, tagFilter),
 		ArticlesHeader: sortHeader("Articles", "articles", sortBy, dir, q, tagFilter),
 		SyncedHeader:   sortHeader("Last Synced", "synced", sortBy, dir, q, tagFilter),
-		TopbarUser:     shared.BuildTopbarUser(r),
 	}
 
 	if r.Header.Get("HX-Request") == "true" {
@@ -76,6 +75,10 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	// Only the full page renders the topbar/sidebar, so this is skipped above for the
+	// "sources-results" HTMX partial (search/sort/filter) - no point building it there.
+	view.TopbarUser, view.LastSyncedAgo = shared.BuildChrome(r, h.source)
 
 	shared.Render(w, "sources", view)
 }

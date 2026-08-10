@@ -4,11 +4,12 @@ import "github.com/khainouski/news-explorer/internal/controller/http/shared"
 
 // SourcesView is what web/pages/sources.html renders.
 type SourcesView struct {
-	PageTitle   string
-	Active      string
-	SearchScope string
-	Sources     []SourceRow
-	Total       int
+	PageTitle     string
+	Active        string
+	LastSyncedAgo string
+	SearchScope   string
+	Sources       []SourceRow
+	Total         int
 
 	Query      string // current search term (?q=), matched against name/description/tag
 	SourceHref string // "Source" header link - resets sort, keeps Query
@@ -55,10 +56,11 @@ type SortHeader struct {
 // SourceFormView is what web/pages/source_form.html renders - the Add/Edit Source form, both
 // share this template. EditingID is "" for Add.
 type SourceFormView struct {
-	PageTitle   string
-	Active      string
-	Tags        []TagOption
-	BadgeColors []BadgeColor
+	PageTitle     string
+	Active        string
+	LastSyncedAgo string
+	Tags          []TagOption
+	BadgeColors   []BadgeColor
 
 	Title       string // "Add Source" or "Edit Source"
 	SubmitLabel string // "Save Source" or "Save Changes"

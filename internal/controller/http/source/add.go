@@ -89,7 +89,9 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 // and Edit/Update (pre-filled) in edit.go. Title/SubmitLabel/ActionURL are computed here from
 // EditingID rather than branched in the template.
 func (h *Handler) renderForm(w http.ResponseWriter, r *http.Request, view SourceFormView) {
-	tags, err := h.tag.List(r.Context())
+	ctx := r.Context()
+
+	tags, err := h.tag.List(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("list tags")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -106,7 +108,7 @@ func (h *Handler) renderForm(w http.ResponseWriter, r *http.Request, view Source
 	view.Active = "sources"
 	view.Tags = toTagOptions(tags)
 	view.BadgeColors = badgeColorPalette
-	view.TopbarUser = shared.BuildTopbarUser(r)
+	view.TopbarUser, view.LastSyncedAgo = shared.BuildChrome(r, h.source)
 
 	shared.Render(w, "source_form", view)
 }

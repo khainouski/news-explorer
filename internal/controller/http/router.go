@@ -75,7 +75,9 @@ func NewRouter(d Dependencies) *chi.Mux {
 		r.With(middleware.RequireAdminAPI).Delete("/sources/{id}", sourceHandler.Delete)
 		r.With(middleware.RequireAdminAPI).Post("/sources/sync", sourceHandler.Sync)
 
-		r.Get("/search", search)
+		r.Get("/search", func(w http.ResponseWriter, r *http.Request) {
+			search(w, r, d.Source)
+		})
 
 		r.Get("/login", authHandler.Login)
 		r.Post("/login", authHandler.LoginSubmit)
@@ -89,19 +91,23 @@ func NewRouter(d Dependencies) *chi.Mux {
 
 // comingSoonView is what web/pages/coming_soon.html renders. Currently just /search.
 type comingSoonView struct {
-	PageTitle   string
-	Active      string
-	SearchScope string // always "" - no results container on this page, topbar shows a disabled input
-	Description string
-	TopbarUser  shared.TopbarUser
+	PageTitle     string
+	Active        string
+	LastSyncedAgo string
+	SearchScope   string // always "" - no results container on this page, topbar shows a disabled input
+	Description   string
+	TopbarUser    shared.TopbarUser
 }
 
-func search(w http.ResponseWriter, r *http.Request) {
+func search(w http.ResponseWriter, r *http.Request, sourceUC *usecasesource.UseCase) {
+	topbarUser, lastSyncedAgo := shared.BuildChrome(r, sourceUC)
+
 	shared.Render(w, "coming_soon", comingSoonView{
-		PageTitle:   "Search",
-		Active:      "search",
-		Description: "Search across every article and source.",
-		TopbarUser:  shared.BuildTopbarUser(r),
+		PageTitle:     "Search",
+		Active:        "search",
+		LastSyncedAgo: lastSyncedAgo,
+		Description:   "Search across every article and source.",
+		TopbarUser:    topbarUser,
 	})
 }
 

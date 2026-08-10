@@ -4,13 +4,14 @@ import "github.com/khainouski/news-explorer/internal/controller/http/shared"
 
 // HomeView is what web/pages/home.html renders: the article feed plus the sources sidebar.
 type HomeView struct {
-	PageTitle   string
-	Active      string
-	SearchScope string // "articles" - tells topbar.html which results container the search box targets
-	Articles    []ArticleView
-	Sources     []SourceView
-	TotalCount  int
-	SourceCount int
+	PageTitle     string
+	Active        string
+	LastSyncedAgo string
+	SearchScope   string // "articles" - tells topbar.html which results container the search box targets
+	Articles      []ArticleView
+	Sources       []SourceView
+	TotalCount    int
+	SourceCount   int
 
 	Query string // current search term (?q=), matched against title/summary/source name
 
