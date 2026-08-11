@@ -65,7 +65,7 @@ Running News Explorer in production spans three repositories:
 | **`news-platform-deploy`** | Helm chart + Argo CD `Application` manifests (GitOps) — deploys the app and the observability stack (Prometheus, Tempo, Grafana) onto the cluster |
 | **`news-explorer-client`** | Synthetic load generator — drives realistic traffic against the deployed app so Grafana dashboards have real data to show |
 
-Release flow:
+**Release flow:**
 
 1. Push to `main` — GitHub Actions builds and pushes the image to GHCR, tagged `sha-<commit>`.
 2. `news-explorer-infra`: `terraform apply` provisions the Droplet; cloud-init installs k3s and
@@ -74,6 +74,25 @@ Release flow:
    new `sha-<commit>`, commit and push.
 4. Argo CD picks up the change and rolls out the new version automatically.
 5. Verify: `curl http://goskills.xyz`.
+
+| URL | What |
+|---|---|
+| https://goskills.xyz | the app |
+| https://grafana.goskills.xyz | Grafana dashboards |
+| https://argocd.goskills.xyz | Argo CD UI |
+
+Grafana and Argo CD both need a password — read it out of the cluster (`admin`/`admin-user` is
+the username in both cases):
+
+```bash
+DROPLET_IP=$(cd ../news-explorer-infra/environments/dev && terraform output -raw droplet_ipv4)
+
+# Grafana
+ssh root@$DROPLET_IP "k3s kubectl -n monitoring get secret grafana-admin-credentials -o jsonpath='{.data.admin-password}' | base64 -d; echo"
+
+# Argo CD (argocd-initial-admin-secret is created by Argo CD's own installer, not by cloud-init)
+ssh root@$DROPLET_IP "k3s kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo"
+```
 
 ## Architecture
 
