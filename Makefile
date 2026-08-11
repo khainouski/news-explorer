@@ -4,7 +4,7 @@ IMAGE    := $(APP_NAME):local
 DB_MIGRATE_URL := postgres://news_explorer:local@localhost:5432/news_explorer?sslmode=disable
 MIGRATE_PATH   := ./migration/postgres
 
-.PHONY: run build test lint tidy docker-build docker-run up down migrate-install migrate-create migrate-up migrate-down
+.PHONY: run build test lint tidy docker-build docker-run up down migrate-install migrate-create migrate-up migrate-down tailwind-install tailwind-build
 
 run:
 	LOG_PRETTY=true go run ./cmd/app
@@ -47,3 +47,11 @@ migrate-up:
 
 migrate-down:
 	migrate -database "$(DB_MIGRATE_URL)" -path "$(MIGRATE_PATH)" down -all
+
+tailwind-build:
+	bin/tailwindcss -i web/tailwind/input.css -o web/static/css/app.css --config web/tailwind/config.js --minify
+
+tailwind-install:
+	mkdir -p bin
+	curl -sLo bin/tailwindcss "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-$$(uname -s | tr 'A-Z' 'a-z' | sed 's/darwin/macos/')-$$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/')"
+	chmod +x bin/tailwindcss

@@ -17,13 +17,15 @@ Grafana). See [Cloud Deployment](#cloud-deployment) and [Architecture](#architec
 
 ## Local Setup
 
-**Prerequisites:** Go 1.26.5, Docker (for `docker compose`), and the
-[`golang-migrate`](https://github.com/golang-migrate/migrate) CLI (`make migrate-install`).
+**Prerequisites:** Go 1.26.5, Docker (for `docker compose`), the
+[`golang-migrate`](https://github.com/golang-migrate/migrate) CLI (`make migrate-install`), and
+the [Tailwind CLI](https://github.com/tailwindlabs/tailwindcss/releases) (`make tailwind-install`).
 
 ```shell
 cp .env.example .env    # Postgres connection vars - defaults match docker-compose.yml
 make up                 # start Postgres in Docker
 make migrate-up         # apply schema + seed data (Go sources, tags, the admin user)
+make tailwind-build      # compile web/static/css/app.css - re-run after changing template classes
 make run                # go run ./cmd/app - server listens on :8080
 ```
 

@@ -1,8 +1,4 @@
-{{/* base is the HTML shell every page renders into. Tailwind comes from the CDN build on purpose
-     (walking-skeleton stage - see README) - a compiled build needs its own image layer with the
-     Tailwind CLI, and we're keeping the image light for now. HTMX is vendored locally
-     (web/static/js/htmx.min.js) - it's a plain ~50KB file, no build step, no reason for a CDN
-     dependency on that one. */}}
+{{/* base is the HTML shell every page renders into. */}}
 {{define "base"}}<!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
@@ -10,12 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{{.PageTitle}} - Dev News</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config = { darkMode: 'class' };</script>
+  <link rel="stylesheet" href="/static/css/app.css"/>
   <style>
-    /* Collapsed sidebar state - a plain CSS override (not a Tailwind utility) so sidebar.js can
-       apply it synchronously before Tailwind's Play CDN has even parsed the page, same reason
-       theme.js toggles a class instead of an inline style for dark mode. */
+    /* Collapsed sidebar state - a plain CSS override, not a Tailwind utility. */
     html.sidebar-collapsed #sidebar { width: 76px; }
     html.sidebar-collapsed .sidebar-label { display: none; }
     html.sidebar-collapsed .sidebar-icon-row { justify-content: center; }
