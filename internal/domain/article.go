@@ -14,3 +14,15 @@ type Article struct {
 	PublishedAt time.Time
 	Unread      bool
 }
+
+// ArticleListParams filters/sorts/paginates List - zero value means no filter, Limit 0 means no
+// page (every matching row).
+type ArticleListParams struct {
+	SourceID string
+	TagID    string
+	Query    string // matched against title/summary/source name
+	Oldest   bool   // false = newest first
+
+	Limit  int
+	Offset int
+}

@@ -10,7 +10,8 @@ import (
 )
 
 type Postgres interface {
-	List(ctx context.Context) ([]domain.Article, error)
+	List(ctx context.Context, params domain.ArticleListParams) ([]domain.Article, int, error)
+	UnreadCountsBySource(ctx context.Context) (map[string]int, error)
 }
 
 type UseCase struct {

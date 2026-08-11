@@ -3,7 +3,6 @@ package article
 import (
 	"net/http"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -43,9 +42,18 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	isHXRequest := r.Header.Get("HX-Request") == "true"
 	isLoadMore := page > 1 && isHXRequest
 
+	params := domain.ArticleListParams{
+		SourceID: sourceFilter,
+		TagID:    tagFilter,
+		Query:    q,
+		Oldest:   sortBy == sortOldest,
+		Limit:    pageSize,
+		Offset:   (page - 1) * pageSize,
+	}
+
 	// Sequential, not concurrent: cheap queries, and the connection pool is only 10 wide
 	// (pkg/postgres.maxConns) - not worth 3x the connections for microseconds saved.
-	articles, err := h.article.List(ctx)
+	articles, totalCount, err := h.article.List(ctx, params)
 	if err != nil {
 		log.Error().Err(err).Msg("list articles")
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -62,24 +70,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sourceByID := sourceIndex(sources)
-	filtered := articles
-
-	if sourceFilter != "" {
-		filtered = filterArticlesBySource(filtered, sourceFilter)
-	}
-
-	if tagFilter != "" {
-		filtered = filterArticlesByTag(filtered, sourceByID, tagFilter)
-	}
-
-	if q != "" {
-		filtered = filterArticlesByQuery(filtered, sourceByID, q)
-	}
-
-	sortArticles(filtered, sortBy)
-
-	totalCount := len(filtered)
-	pageArticles, hasMore := paginate(filtered, page)
+	hasMore := params.Offset+len(articles) < totalCount
 
 	var nextPageHref string
 	if hasMore {
@@ -88,7 +79,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	if isLoadMore {
 		shared.RenderBlock(w, "home", "article-page", HomeView{
-			Articles:     toArticleViews(pageArticles, sourceByID),
+			Articles:     toArticleViews(articles, sourceByID),
 			NextPageHref: nextPageHref,
 		})
 
@@ -103,13 +94,19 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	unreadCounts := unreadCountsBySource(articles)
+	unreadCounts, err := h.article.UnreadCountsBySource(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("unread counts")
+		http.Error(w, "internal error", http.StatusInternalServerError)
+
+		return
+	}
 
 	view := HomeView{
 		PageTitle:        "All Articles",
 		Active:           "articles",
 		SearchScope:      "articles",
-		Articles:         toArticleViews(pageArticles, sourceByID),
+		Articles:         toArticleViews(articles, sourceByID),
 		Sources:          toSourceViews(sources, unreadCounts, sourceFilter, sortBy, tagFilter, q),
 		TotalCount:       totalCount,
 		SourceCount:      len(sources),
@@ -145,13 +142,6 @@ func currentPage(r *http.Request) int {
 	return page
 }
 
-func paginate(articles []domain.Article, page int) ([]domain.Article, bool) {
-	start := min((page-1)*pageSize, len(articles))
-	end := min(start+pageSize, len(articles))
-
-	return articles[start:end], end < len(articles)
-}
-
 func sourceIndex(sources []domain.Source) map[string]domain.Source {
 	m := make(map[string]domain.Source, len(sources))
 	for _, s := range sources {
@@ -159,51 +149,6 @@ func sourceIndex(sources []domain.Source) map[string]domain.Source {
 	}
 
 	return m
-}
-
-func filterArticlesBySource(articles []domain.Article, sourceID string) []domain.Article {
-	filtered := make([]domain.Article, 0, len(articles))
-
-	for _, a := range articles {
-		if a.SourceID == sourceID {
-			filtered = append(filtered, a)
-		}
-	}
-
-	return filtered
-}
-
-// filterArticlesByTag keeps articles whose source has the given tag - Article has no tag column
-// of its own.
-func filterArticlesByTag(articles []domain.Article, sourceByID map[string]domain.Source, tagID string) []domain.Article {
-	filtered := make([]domain.Article, 0, len(articles))
-
-	for _, a := range articles {
-		if sourceByID[a.SourceID].Tag.ID == tagID {
-			filtered = append(filtered, a)
-		}
-	}
-
-	return filtered
-}
-
-// filterArticlesByQuery keeps articles whose title, summary or source name contains q.
-func filterArticlesByQuery(articles []domain.Article, sourceByID map[string]domain.Source, q string) []domain.Article {
-	q = strings.ToLower(q)
-
-	filtered := make([]domain.Article, 0, len(articles))
-
-	for _, a := range articles {
-		match := strings.Contains(strings.ToLower(a.Title), q) ||
-			strings.Contains(strings.ToLower(a.Summary), q) ||
-			strings.Contains(strings.ToLower(sourceByID[a.SourceID].Name), q)
-
-		if match {
-			filtered = append(filtered, a)
-		}
-	}
-
-	return filtered
 }
 
 func sourceName(sources []domain.Source, sourceID string) string {
@@ -218,15 +163,6 @@ func sourceName(sources []domain.Source, sourceID string) string {
 	}
 
 	return ""
-}
-
-func sortArticles(articles []domain.Article, sortBy string) {
-	switch sortBy {
-	case sortOldest:
-		sort.SliceStable(articles, func(i, j int) bool {
-			return articles[i].PublishedAt.Before(articles[j].PublishedAt)
-		})
-	}
 }
 
 func sortLabel(sortBy string) string {
@@ -305,18 +241,6 @@ func tagFilters(tags []domain.Tag, sortBy, sourceFilter, activeTag, q string) []
 	}
 
 	return pills
-}
-
-func unreadCountsBySource(articles []domain.Article) map[string]int {
-	counts := make(map[string]int, len(articles))
-
-	for _, a := range articles {
-		if a.Unread {
-			counts[a.SourceID]++
-		}
-	}
-
-	return counts
 }
 
 // homeURL builds a "/" URL carrying sortBy/sourceID/tagID/q/page - any can be zero-valued to
