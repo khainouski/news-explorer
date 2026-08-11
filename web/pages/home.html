@@ -56,6 +56,7 @@
     </div>
     <div class="mx-6 mb-6 mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       {{range .Articles}}{{template "article-row" .}}{{end}}
+      {{if .NextPageHref}}{{template "article-sentinel" .}}{{end}}
     </div>
   </main>
   <aside class="w-80 shrink-0 overflow-y-auto border-l border-gray-200 bg-white px-5 py-6 dark:border-gray-800 dark:bg-gray-900">
@@ -69,4 +70,10 @@
     </div>
   </aside>
 </div>
+{{end}}
+
+{{/* article-page receives an article.HomeView. */}}
+{{define "article-page"}}
+{{range .Articles}}{{template "article-row" .}}{{end}}
+{{if .NextPageHref}}{{template "article-sentinel" .}}{{end}}
 {{end}}

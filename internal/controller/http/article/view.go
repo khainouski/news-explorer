@@ -30,6 +30,8 @@ type HomeView struct {
 	TagFilters []shared.TagPill // "All" (TagID "") first, then one per tag
 
 	TopbarUser shared.TopbarUser
+
+	NextPageHref string
 }
 
 // ArticleView is what web/components/article/row.html renders.

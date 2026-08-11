@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/khainouski/news-explorer/internal/controller/http/article"
@@ -38,8 +39,10 @@ type Dependencies struct {
 func NewRouter(d Dependencies) *chi.Mux {
 	r := chi.NewRouter()
 
-	// Health probes and /metrics stay outside the otel/logger/metrics stack below - Kubernetes
-	// polls them every few seconds and they'd otherwise spam traces/logs/metrics with noise.
+	r.Use(chimiddleware.Compress(5,
+		"text/html", "text/css", "text/javascript", "application/javascript",
+		"image/svg+xml", "application/json"))
+
 	r.Get("/live", probe)
 	r.Get("/ready", probe)
 	r.Handle("/metrics", promhttp.Handler())

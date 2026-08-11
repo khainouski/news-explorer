@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -16,6 +17,8 @@ import (
 const (
 	sortLatest = "latest"
 	sortOldest = "oldest"
+
+	pageSize = 20
 )
 
 // List handles GET / - the home feed.
@@ -79,13 +82,22 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	sortArticles(articles, sortBy)
 
+	totalCount := len(articles)
+	page := currentPage(r)
+	pageArticles, hasMore := paginate(articles, page)
+
+	var nextPageHref string
+	if hasMore {
+		nextPageHref = homeURL(sortBy, sourceFilter, tagFilter, q, page+1)
+	}
+
 	view := HomeView{
 		PageTitle:        "All Articles",
 		Active:           "articles",
 		SearchScope:      "articles",
-		Articles:         toArticleViews(articles, sourceByID),
+		Articles:         toArticleViews(pageArticles, sourceByID),
 		Sources:          toSourceViews(sources, unreadCounts, sourceFilter, sortBy, tagFilter, q),
-		TotalCount:       len(articles),
+		TotalCount:       totalCount,
 		SourceCount:      len(sources),
 		Query:            q,
 		SortBy:           sortBy,
@@ -94,21 +106,44 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		SortLabel:        sortLabel(sortBy),
 		SortOptions:      sortOptions(sortBy, sourceFilter, tagFilter, q),
 		FilterSourceName: sourceName(sources, sourceFilter),
-		ClearFilterHref:  homeURL(sortBy, "", tagFilter, q),
+		ClearFilterHref:  homeURL(sortBy, "", tagFilter, q, 0),
 		TagFilters:       tagFilters(tags, sortBy, sourceFilter, tagFilter, q),
+		NextPageHref:     nextPageHref,
 	}
 
-	if r.Header.Get("HX-Request") == "true" {
+	isHXRequest := r.Header.Get("HX-Request") == "true"
+
+	if page > 1 && isHXRequest {
+		shared.RenderBlock(w, "home", "article-page", view)
+
+		return
+	}
+
+	if isHXRequest {
 		shared.RenderBlock(w, "home", "home-articles", view)
 
 		return
 	}
 
-	// Only the full page renders the topbar/sidebar, so this is skipped above for the
-	// "home-articles" HTMX partial (search/sort/filter) - no point building it there.
 	view.TopbarUser, view.LastSyncedAgo = shared.BuildChrome(r, h.source)
 
 	shared.Render(w, "home", view)
+}
+
+func currentPage(r *http.Request) int {
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		return 1
+	}
+
+	return page
+}
+
+func paginate(articles []domain.Article, page int) ([]domain.Article, bool) {
+	start := min((page-1)*pageSize, len(articles))
+	end := min(start+pageSize, len(articles))
+
+	return articles[start:end], end < len(articles)
 }
 
 func sourceIndex(sources []domain.Source) map[string]domain.Source {
@@ -214,7 +249,7 @@ func sortOptions(activeSort, sourceFilter, tagFilter, q string) []SortOption {
 	for _, o := range options {
 		views = append(views, SortOption{
 			Label:  o.label,
-			Href:   homeURL(o.key, sourceFilter, tagFilter, q),
+			Href:   homeURL(o.key, sourceFilter, tagFilter, q, 0),
 			Active: o.key == activeSort,
 		})
 	}
@@ -228,9 +263,9 @@ func toSourceViews(sources []domain.Source, unreadCounts map[string]int, activeS
 	for _, s := range sources {
 		active := s.ID == activeSourceID
 
-		href := homeURL(sortBy, s.ID, tagFilter, q)
+		href := homeURL(sortBy, s.ID, tagFilter, q, 0)
 		if active {
-			href = homeURL(sortBy, "", tagFilter, q)
+			href = homeURL(sortBy, "", tagFilter, q, 0)
 		}
 
 		views = append(views, SourceView{
@@ -251,14 +286,14 @@ func tagFilters(tags []domain.Tag, sortBy, sourceFilter, activeTag, q string) []
 
 	pills = append(pills, shared.TagPill{
 		Label:  "All",
-		Href:   homeURL(sortBy, sourceFilter, "", q),
+		Href:   homeURL(sortBy, sourceFilter, "", q, 0),
 		Active: activeTag == "",
 	})
 
 	for _, t := range tags {
 		pills = append(pills, shared.TagPill{
 			Label:  t.Name,
-			Href:   homeURL(sortBy, sourceFilter, t.ID, q),
+			Href:   homeURL(sortBy, sourceFilter, t.ID, q, 0),
 			Active: t.ID == activeTag,
 		})
 	}
@@ -278,9 +313,9 @@ func unreadCountsBySource(articles []domain.Article) map[string]int {
 	return counts
 }
 
-// homeURL builds a "/" URL carrying sortBy/sourceID/tagID/q - any of them can be empty to omit
-// it. sortLatest is the default, so it's never written out either.
-func homeURL(sortBy, sourceID, tagID, q string) string {
+// homeURL builds a "/" URL carrying sortBy/sourceID/tagID/q/page - any can be zero-valued to
+// omit it. sortLatest and page<=1 are the defaults, so neither is ever written out.
+func homeURL(sortBy, sourceID, tagID, q string, page int) string {
 	v := url.Values{}
 	if sortBy != "" && sortBy != sortLatest {
 		v.Set("sort", sortBy)
@@ -296,6 +331,10 @@ func homeURL(sortBy, sourceID, tagID, q string) string {
 
 	if q != "" {
 		v.Set("q", q)
+	}
+
+	if page > 1 {
+		v.Set("page", strconv.Itoa(page))
 	}
 
 	if len(v) == 0 {
