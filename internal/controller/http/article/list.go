@@ -39,6 +39,10 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	page := currentPage(r)
+	isHXRequest := r.Header.Get("HX-Request") == "true"
+	isLoadMore := page > 1 && isHXRequest
+
 	// Sequential, not concurrent: cheap queries, and the connection pool is only 10 wide
 	// (pkg/postgres.maxConns) - not worth 3x the connections for microseconds saved.
 	articles, err := h.article.List(ctx)
@@ -57,6 +61,40 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sourceByID := sourceIndex(sources)
+	filtered := articles
+
+	if sourceFilter != "" {
+		filtered = filterArticlesBySource(filtered, sourceFilter)
+	}
+
+	if tagFilter != "" {
+		filtered = filterArticlesByTag(filtered, sourceByID, tagFilter)
+	}
+
+	if q != "" {
+		filtered = filterArticlesByQuery(filtered, sourceByID, q)
+	}
+
+	sortArticles(filtered, sortBy)
+
+	totalCount := len(filtered)
+	pageArticles, hasMore := paginate(filtered, page)
+
+	var nextPageHref string
+	if hasMore {
+		nextPageHref = homeURL(sortBy, sourceFilter, tagFilter, q, page+1)
+	}
+
+	if isLoadMore {
+		shared.RenderBlock(w, "home", "article-page", HomeView{
+			Articles:     toArticleViews(pageArticles, sourceByID),
+			NextPageHref: nextPageHref,
+		})
+
+		return
+	}
+
 	tags, err := h.tag.List(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("list tags")
@@ -65,31 +103,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sourceByID := sourceIndex(sources)
 	unreadCounts := unreadCountsBySource(articles)
-
-	if sourceFilter != "" {
-		articles = filterArticlesBySource(articles, sourceFilter)
-	}
-
-	if tagFilter != "" {
-		articles = filterArticlesByTag(articles, sourceByID, tagFilter)
-	}
-
-	if q != "" {
-		articles = filterArticlesByQuery(articles, sourceByID, q)
-	}
-
-	sortArticles(articles, sortBy)
-
-	totalCount := len(articles)
-	page := currentPage(r)
-	pageArticles, hasMore := paginate(articles, page)
-
-	var nextPageHref string
-	if hasMore {
-		nextPageHref = homeURL(sortBy, sourceFilter, tagFilter, q, page+1)
-	}
 
 	view := HomeView{
 		PageTitle:        "All Articles",
@@ -109,14 +123,6 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		ClearFilterHref:  homeURL(sortBy, "", tagFilter, q, 0),
 		TagFilters:       tagFilters(tags, sortBy, sourceFilter, tagFilter, q),
 		NextPageHref:     nextPageHref,
-	}
-
-	isHXRequest := r.Header.Get("HX-Request") == "true"
-
-	if page > 1 && isHXRequest {
-		shared.RenderBlock(w, "home", "article-page", view)
-
-		return
 	}
 
 	if isHXRequest {

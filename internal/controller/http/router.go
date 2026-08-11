@@ -54,7 +54,7 @@ func NewRouter(d Dependencies) *chi.Mux {
 		panic(err) // static assets are embedded at build time - can only fail if the build itself is broken
 	}
 
-	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+	r.With(cacheControl).Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 	r.NotFound(shared.NotFound) // unmatched routes get the styled 404 page, not chi's plain-text default
 
@@ -116,4 +116,11 @@ func search(w http.ResponseWriter, r *http.Request, sourceUC *usecasesource.UseC
 
 func probe(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func cacheControl(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=300")
+		next.ServeHTTP(w, r)
+	})
 }
